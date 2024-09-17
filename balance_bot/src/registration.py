@@ -6,12 +6,20 @@ from redis.exceptions import ResponseError
 from botui import InputModal, SelectView, selection_all, collect_selection_finish, button_pressed, buttons_all, collect_buttons_finish
 from db_utils import jdb_set
 from dc_utils import clean_up_msg
+from utils import log
 
+#TODO: Do I have to 'error check' for status code here?
 async def get_player_stats(player_tag):
     url = f"https://quake-stats.bethesda.net/api/v2/Player/Stats?name={player_tag}"
     r = requests.get(url)
-    player_data = r.json()
-    return player_data
+    log(f"Quake API Request returned: HTTP {r.status_code}")
+    if r.status_code == 200:
+        player_data = r.json()
+        return player_data
+    else:
+        #await data_dict["channel"].send("Error: 404 `{}` is resulting in a 404 from quake-stats api".format(quake_name))
+        return {}
+
 
 async def refresh_all_players_data(data_dict, interaction=None):
     db = data_dict["db"]
@@ -38,8 +46,8 @@ async def refresh_player_data(data_dict, interaction = None, show_results = True
         await data_dict["channel"].send("Error: DB entry for user id `{}` is missing your Quake name, please register first".format(data_dict["author"].id))
         return {}
     player_stats = await get_player_stats(quake_name)
-    if player_stats.get("code")==404:
-        await data_dict["channel"].send("Error: 404 `{}` is resulting in a 404 from quake-stats api".format(quake_name))
+    if not player_stats.get("code") == 200:
+        await data_dict["channel"].send("Error: Query for `{}` is resulting in a 404/503 from quake-stats api".format(quake_name))
         return {}
     data_dict["qcstats"] = player_stats
     db = data_dict["db"]
@@ -227,6 +235,7 @@ async def register_player(message, db):
                                                 "defer":False
                                                 }
                                               )
+    #TODO: Remove harcdoded user ID
     if author.id==88533822521507840:
         data_dict["buttons"][current_stage].append({"callback_func": lambda self, 
                                                                     interaction, data_dict:refresh_all_players_data(data_dict,

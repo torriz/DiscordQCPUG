@@ -1,4 +1,6 @@
-FROM clearlinux/tesseract-ocr
+#FROM clearlinux/tesseract-ocr
+#FROM franky1/tesseract
+FROM ghcr.io/clearlinux/tesseract-ocr:42360
 COPY ./ocr /app
 ENV TESSDATA_PREFIX /app
 RUN swupd bundle-add python3-basic

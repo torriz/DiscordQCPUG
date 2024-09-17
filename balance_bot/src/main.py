@@ -36,7 +36,7 @@ bot = discord.Bot(intents=intents)
 
 @bot.listen()
 async def on_ready():
-    log('We have logged in as {0.user}'.format(bot))
+    log('We have logged in as {0.user}'.format(bot), level=logging.INFO)
     guilds = bot.guilds
     for guild in guilds:
         log(guild)
